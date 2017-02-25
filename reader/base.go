@@ -1,73 +1,88 @@
 package reader
 
 import (
-	"bufio"
+	"errors"
 	"fmt"
 	"io"
 )
 
 type base struct {
-	r *bufio.Reader
+	r io.ReadSeeker
 }
 
 func (r *base) Discard(count int) error {
-	passed, err := r.r.Discard(count)
+	c := int64(count)
+	_, err := r.r.Seek(c, io.SeekCurrent)
 	if err != nil {
 		panic(err)
-	}
-	if count != passed {
-		panic(fmt.Errorf("Expected to pass %d bytes; only moved %d", count, passed))
 	}
 	fmt.Printf("; moved by %d bytes", count)
 	return nil
 }
 
-func (r *base) GetReader() *bufio.Reader {
+func (r *base) GetReader() io.ReadSeeker {
 	return r.r
 }
 
 func (r *base) ReadNullTerminatedString() (string, error) {
-	b, err := r.r.ReadBytes('\x00')
+	start, err := r.r.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return "", err
 	}
-	return string(b), nil
+	b := []byte{0x00}
+	length := 0
+	for {
+		n, err := r.r.Read(b)
+		if err != nil {
+			return "", err
+		}
+		if n != 1 {
+			return "", errors.New("Not enough byte")
+		}
+		if b[0] == '\x00' {
+			// This is the end.
+			break
+		}
+		length++
+	}
+
+	r.r.Seek(start, io.SeekStart)
+	buf := make([]byte, length)
+
+	n, err := r.r.Read(buf)
+	if err != nil {
+		return "", err
+	}
+	if n != length {
+		return "", errors.New("Failed to re-read text\n")
+	}
+
+	return string(buf), nil
 }
 
 func (r *base) ReadTo() (bool, error) {
+	fmt.Printf("; reading past image segment")
+	b := []byte{0x00}
 	passed := 0
+
 	for {
-		l, err := r.r.ReadSlice('\xff')
-		if err == bufio.ErrBufferFull {
-			// Filled up the buffer without finding the character.
-			fmt.Printf("Buffer filled...\n")
-			continue
-		} else if err == io.EOF {
-			// Ran out of bytes entirely.
-			fmt.Printf("EOF\n")
-			return false, nil
-		} else if err != nil {
-			fmt.Printf("Other error: %s", err)
-			return false, err
+		n, err := r.r.Read(b)
+		if n != 1 || err != nil {
+			return false, errors.New("Failed to read 1 byte")
 		}
-		passed += len(l)
-		next, err2 := r.r.Peek(1)
-		if err2 != nil {
-			if err2 == bufio.ErrBufferFull {
-				fmt.Printf("Got 0xff and buffer full when peaking")
-				return false, nil
-			} else if err2 == io.EOF {
-				fmt.Printf("Got 0xff and EOF")
-				return false, nil
+		passed++
+		if b[0] == '\xff' {
+			// Check the next byte; if it is non-0x00, we are done.
+			n, err := r.r.Read(b)
+			if n != 1 || err != nil {
+				return false, errors.New("Failed to read 1 next byte")
 			}
-			fmt.Printf("Got 0xff and other error: %s\n", err2)
-			return false, err2
-		}
-		if next[0] != '\x00' {
-			// Found 0xffxx, where xx != 00
-			r.r.UnreadByte()
-			fmt.Printf("; after %d bytes, found non-escaped 0xff", passed)
-			return true, nil
+			if b[0] != '\x00' {
+				// Found 0xffxx, where xx != 00
+				r.r.Seek(-2, io.SeekCurrent)
+				fmt.Printf("; after %d bytes, found non-escaped 0xff", passed)
+				return true, nil
+			}
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package metadata_test
 
 import (
-	"bufio"
 	"bytes"
 	"os"
 	"reflect"
@@ -28,8 +27,8 @@ func Test_Header(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			reader := bytes.NewReader(tc.header)
-			buffer := bufio.NewReader(reader)
+			buffer := bytes.NewReader(tc.header)
+			// buffer := bufio.NewReader(reader)
 
 			r, err := metadata.ReadHeader(buffer)
 			if tc.expectErr {
@@ -69,8 +68,8 @@ func Test_File(t *testing.T) {
 	}
 	defer file.Close()
 
-	reader := bufio.NewReader(file)
-	ir, err := metadata.ReadHeader(reader)
+	// reader := bufio.NewReader(file)
+	ir, err := metadata.ReadHeader(file)
 	if err != nil {
 		t.Fatalf("Error while reading header: %s\n", err)
 	}

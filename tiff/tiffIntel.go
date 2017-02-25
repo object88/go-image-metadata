@@ -1,8 +1,8 @@
 package tiff
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 
 	metadata "github.com/object88/go-image-metadata"
 	"github.com/object88/go-image-metadata/common"
@@ -18,16 +18,12 @@ type IntelReader struct {
 	r reader.Reader
 }
 
-func CheckIntelHeader(r *bufio.Reader) (common.ImageReader, error) {
-	// b := make([]byte, 4)
-	// n, err := r.Read(b)
-	b, err := r.Peek(4)
-	if err != nil {
+func CheckIntelHeader(r io.ReadSeeker) (common.ImageReader, error) {
+	b := []byte{0x00, 0x00, 0x00, 0x00}
+	n, err := r.Read(b)
+	if n != 4 || err != nil {
 		return nil, err
 	}
-	// if n != 4 {
-	// 	return nil, errors.New("Did not read 4 bytes")
-	// }
 
 	// Read the magic number and endian check
 	if b[0] != 0x49 || b[1] != 0x49 || b[2] != 0x2a || b[3] != 0x00 {

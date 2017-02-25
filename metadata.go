@@ -1,9 +1,9 @@
 package metadata
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/object88/go-image-metadata/common"
 )
@@ -14,8 +14,7 @@ func RegisterHeaderCheck(fn CheckHeader) {
 	readers = append(readers, fn)
 }
 
-func ReadHeader(reader *bufio.Reader) (common.ImageReader, error) {
-	// b := bufio.NewReader(reader)
+func ReadHeader(reader io.ReadSeeker) (common.ImageReader, error) {
 	for _, f := range readers {
 		fmt.Printf("Checking reader %#v... ", f)
 		r, err := f(reader)

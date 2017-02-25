@@ -1,8 +1,8 @@
 package reader
 
 import (
-	"bufio"
 	"encoding/binary"
+	"io"
 )
 
 // BigEndianReader is a wrapper around `bytes.Reader` with respect towards
@@ -11,7 +11,7 @@ type BigEndianReader struct {
 	base
 }
 
-func CreateBigEndianReader(r *bufio.Reader) Reader {
+func CreateBigEndianReader(r io.ReadSeeker) Reader {
 	return &BigEndianReader{
 		base: base{r},
 	}

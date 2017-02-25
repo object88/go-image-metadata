@@ -1,13 +1,13 @@
 package reader
 
-import "bufio"
+import "io"
 
 // Reader is a byte reader whose implementations is endian-aware
 type Reader interface {
 	// Discard fast-forwards over `count` bytes, discarding their contents
 	Discard(count int) error
 
-	GetReader() *bufio.Reader
+	GetReader() io.ReadSeeker
 
 	// ReadNullTerminatedString reads a series of bytes, until it encounters
 	// '\000', and returns a string.

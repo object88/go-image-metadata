@@ -1,8 +1,8 @@
 package jfif
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 
 	"github.com/object88/go-image-metadata"
 	"github.com/object88/go-image-metadata/common"
@@ -18,11 +18,13 @@ type Reader struct {
 }
 
 // CheckHeader checks the byte stream to see if it contains a JFIF
-func CheckHeader(r *bufio.Reader) (common.ImageReader, error) {
+func CheckHeader(r io.ReadSeeker) (common.ImageReader, error) {
 	// b := make([]byte, 2)
 	// n, err := r.Read(b)
-	b, err := r.Peek(2)
-	if err != nil {
+	b := []byte{0x00, 0x00}
+	n, err := r.Read(b)
+	// b, err := r.Peek(2)
+	if n != 2 || err != nil {
 		return nil, err
 	}
 	// if n != 2 {

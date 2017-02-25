@@ -1,15 +1,15 @@
 package reader
 
 import (
-	"bufio"
 	"encoding/binary"
+	"io"
 )
 
 type LittleEndianReader struct {
 	base
 }
 
-func CreateLittleEndianReader(r *bufio.Reader) *LittleEndianReader {
+func CreateLittleEndianReader(r io.ReadSeeker) *LittleEndianReader {
 	return &LittleEndianReader{
 		base: base{r},
 	}
