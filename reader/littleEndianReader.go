@@ -9,9 +9,9 @@ type LittleEndianReader struct {
 	base
 }
 
-func CreateLittleEndianReader(r io.ReadSeeker) *LittleEndianReader {
+func CreateLittleEndianReader(r io.ReadSeeker, baseOffset int64) *LittleEndianReader {
 	return &LittleEndianReader{
-		base: base{r},
+		base: base{r, baseOffset},
 	}
 }
 

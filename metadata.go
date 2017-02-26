@@ -15,8 +15,15 @@ func RegisterHeaderCheck(fn CheckHeader) {
 }
 
 func ReadHeader(reader io.ReadSeeker) (common.ImageReader, error) {
+	start, err := reader.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return nil, err
+	}
 	for _, f := range readers {
-		fmt.Printf("Checking reader %#v... ", f)
+		_, err = reader.Seek(start, io.SeekStart)
+		if err != nil {
+			return nil, err
+		}
 		r, err := f(reader)
 		if err != nil {
 			fmt.Printf("Err: %s\n", err)
@@ -26,7 +33,6 @@ func ReadHeader(reader io.ReadSeeker) (common.ImageReader, error) {
 			fmt.Printf("OK\n")
 			return r, nil
 		}
-		fmt.Printf("\n")
 	}
 
 	return nil, errors.New("Unknown file format")

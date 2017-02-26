@@ -1,5 +1,5 @@
 package common
 
 type ImageReader interface {
-	Read()
+	Read() int64
 }

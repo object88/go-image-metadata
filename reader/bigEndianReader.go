@@ -11,9 +11,9 @@ type BigEndianReader struct {
 	base
 }
 
-func CreateBigEndianReader(r io.ReadSeeker) Reader {
+func CreateBigEndianReader(r io.ReadSeeker, baseOffset int64) Reader {
 	return &BigEndianReader{
-		base: base{r},
+		base: base{r, baseOffset},
 	}
 }
 

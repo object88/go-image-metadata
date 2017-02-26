@@ -19,26 +19,23 @@ type Reader struct {
 
 // CheckHeader checks the byte stream to see if it contains a JFIF
 func CheckHeader(r io.ReadSeeker) (common.ImageReader, error) {
-	// b := make([]byte, 2)
-	// n, err := r.Read(b)
+	fmt.Printf("Checking jfif header... ")
+	cur, _ := r.Seek(0, io.SeekCurrent)
 	b := []byte{0x00, 0x00}
 	n, err := r.Read(b)
-	// b, err := r.Peek(2)
 	if n != 2 || err != nil {
 		return nil, err
 	}
-	// if n != 2 {
-	// 	return nil, errors.New("Did not read 2 bytes")
-	// }
 
 	if b[0] != 0xff || b[1] != 0xd8 {
+		fmt.Printf("got %#v; was wrong\n", b)
 		return nil, nil
 	}
-	fmt.Printf("Matched Jfif reader\n")
-	return &Reader{r: reader.CreateBigEndianReader(r)}, nil
+	fmt.Printf("matched\n")
+	return &Reader{r: reader.CreateBigEndianReader(r, cur)}, nil
 }
 
-func (r *Reader) Read() {
+func (r *Reader) Read() int64 {
 	// Loop over marker segments
 	for {
 		m, e := r.r.ReadUint16()
@@ -60,7 +57,7 @@ func (r *Reader) Read() {
 			r.readAppnSegment()
 		} else if m1 == soi || m^0xffd0>>3 == 0 {
 			// Restart: 0xffd0-0xffd7; nothing to process.
-			fmt.Printf("; got restart")
+			fmt.Printf("got restart\n")
 			continue
 		} else if m1 == sos {
 			// This is the beginning of the image data.  We want to scan past all
@@ -70,10 +67,11 @@ func (r *Reader) Read() {
 			r.moveToNextSegment()
 		}
 	}
+	return 0
 }
 
 func (r *Reader) readAppnSegment() {
-	fmt.Printf("; app segment")
+	fmt.Printf("app segment")
 	remaining, err := r.r.ReadUint16()
 	if err != nil {
 		panic(err)
@@ -93,17 +91,18 @@ func (r *Reader) readAppnSegment() {
 	// Need to check the type of app segment by the null-terminated string, then
 	// act appropriately.
 	switch id {
-	case "Exif\x00":
+	case "Exif":
 		fmt.Printf(" **WOOOO**\n")
 		// The `Exif` string is double-null terminated:
 		// https://www.media.mit.edu/pia/Research/deepview/exif.html
-		r.r.Discard(1)
-		remaining--
+		r.r.Discard(2)
+		remaining -= 2
 		r1, err := metadata.ReadHeader(r.r.GetReader())
 		if err != nil {
 			panic("NOPE")
 		}
-		r1.Read()
+		consumed := r1.Read()
+		remaining -= uint16(consumed)
 
 		r.r.Discard(int(remaining))
 	default:
@@ -120,7 +119,6 @@ func (r *Reader) moveToNextSegment() {
 
 	s0 := s - 2
 	if s0 > 0 {
-		fmt.Printf("; FF %d bytes", s0)
 		r.r.Discard(int(s0))
 	}
 }

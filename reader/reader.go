@@ -7,6 +7,7 @@ type Reader interface {
 	// Discard fast-forwards over `count` bytes, discarding their contents
 	Discard(count int) error
 
+	// Returns the underlying ReadSeeker
 	GetReader() io.ReadSeeker
 
 	// ReadNullTerminatedString reads a series of bytes, until it encounters
@@ -26,4 +27,8 @@ type Reader interface {
 
 	// ReadUint64 reads an unsigned 64-bit value
 	ReadUint64() (uint64, error)
+
+	// Seek moves the internal byte pointer to the specified offset, relative to
+	// the start of the underlying storage
+	SeekTo(offset int) error
 }

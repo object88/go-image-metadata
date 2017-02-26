@@ -7,7 +7,8 @@ import (
 )
 
 type base struct {
-	r io.ReadSeeker
+	r      io.ReadSeeker
+	offset int64
 }
 
 func (r *base) Discard(count int) error {
@@ -16,7 +17,7 @@ func (r *base) Discard(count int) error {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("; moved by %d bytes", count)
+	fmt.Printf("moved by %d bytes\n", count)
 	return nil
 }
 
@@ -61,7 +62,7 @@ func (r *base) ReadNullTerminatedString() (string, error) {
 }
 
 func (r *base) ReadTo() (bool, error) {
-	fmt.Printf("; reading past image segment")
+	fmt.Printf("reading past image segment... ")
 	b := []byte{0x00}
 	passed := 0
 
@@ -80,7 +81,7 @@ func (r *base) ReadTo() (bool, error) {
 			if b[0] != '\x00' {
 				// Found 0xffxx, where xx != 00
 				r.r.Seek(-2, io.SeekCurrent)
-				fmt.Printf("; after %d bytes, found non-escaped 0xff", passed)
+				fmt.Printf("after %d bytes, found non-escaped 0xff\n", passed)
 				return true, nil
 			}
 		}
@@ -104,4 +105,12 @@ func readBytes(r io.Reader, size int) ([]byte, error) {
 		return nil, fmt.Errorf("Was only able to read %d of %d bytes", bytesRead, size)
 	}
 	return t, nil
+}
+
+// Seek moves the internal byte pointer to the specified offset, relative to
+// the start of the underlying storage
+func (r *base) SeekTo(offset int) error {
+	dest := r.offset + int64(offset)
+	r.r.Seek(dest, io.SeekStart)
+	return nil
 }

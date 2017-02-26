@@ -19,6 +19,8 @@ type MotorolaReader struct {
 }
 
 func CheckMotorolaHeader(r io.ReadSeeker) (common.ImageReader, error) {
+	fmt.Printf("Checking motorola tiff header... ")
+	cur, _ := r.Seek(0, io.SeekCurrent)
 	b := []byte{0x00, 0x00, 0x00, 0x00}
 	n, err := r.Read(b)
 	if n != 4 || err != nil {
@@ -27,12 +29,14 @@ func CheckMotorolaHeader(r io.ReadSeeker) (common.ImageReader, error) {
 
 	// Read the magic number and endian check
 	if b[0] != 0x4d || b[1] != 0x4d || b[2] != 0x00 || b[3] != 0x2a {
-		fmt.Printf("Got %s; was wrong\n", b)
+		fmt.Printf("got %#v; was wrong\n", b)
 		return nil, nil
 	}
 
-	fmt.Printf("Matched motorola Tiff reader\n")
-	return &MotorolaReader{r: reader.CreateBigEndianReader(r)}, nil
+	fmt.Printf("matched!\n")
+	return &MotorolaReader{r: reader.CreateBigEndianReader(r, cur)}, nil
 }
 
-func (r *MotorolaReader) Read() {}
+func (r *MotorolaReader) Read() int64 {
+	return 0
+}
