@@ -11,14 +11,21 @@ type base struct {
 	offset int64
 }
 
-func (r *base) Discard(count int) error {
-	c := int64(count)
-	_, err := r.r.Seek(c, io.SeekCurrent)
+func (r *base) Discard(count int64) error {
+	_, err := r.r.Seek(count, io.SeekCurrent)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("moved by %d bytes\n", count)
 	return nil
+}
+
+func (r *base) GetCurrentOffset() int64 {
+	cur, err := r.r.Seek(0, io.SeekCurrent)
+	if err != nil {
+		panic("AT THE DISCO")
+	}
+	return cur - r.offset
 }
 
 func (r *base) GetReader() io.ReadSeeker {
@@ -33,9 +40,9 @@ func (r *base) ReadNullTerminatedString() (string, error) {
 	b := []byte{0x00}
 	length := 0
 	for {
-		n, err := r.r.Read(b)
-		if err != nil {
-			return "", err
+		n, e := r.r.Read(b)
+		if e != nil {
+			return "", e
 		}
 		if n != 1 {
 			return "", errors.New("Not enough byte")
@@ -109,8 +116,8 @@ func readBytes(r io.Reader, size int) ([]byte, error) {
 
 // Seek moves the internal byte pointer to the specified offset, relative to
 // the start of the underlying storage
-func (r *base) SeekTo(offset int) error {
-	dest := r.offset + int64(offset)
+func (r *base) SeekTo(offset int64) error {
+	dest := r.offset + offset
 	r.r.Seek(dest, io.SeekStart)
 	return nil
 }

@@ -5,9 +5,12 @@ import "io"
 // Reader is a byte reader whose implementations is endian-aware
 type Reader interface {
 	// Discard fast-forwards over `count` bytes, discarding their contents
-	Discard(count int) error
+	Discard(count int64) error
 
-	// Returns the underlying ReadSeeker
+	// GetCurrentOffset returns the current offset relative to the starting offset
+	GetCurrentOffset() int64
+
+	// GetReader returns the underlying ReadSeeker
 	GetReader() io.ReadSeeker
 
 	// ReadNullTerminatedString reads a series of bytes, until it encounters
@@ -30,5 +33,5 @@ type Reader interface {
 
 	// Seek moves the internal byte pointer to the specified offset, relative to
 	// the start of the underlying storage
-	SeekTo(offset int) error
+	SeekTo(offset int64) error
 }

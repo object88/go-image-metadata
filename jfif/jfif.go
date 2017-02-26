@@ -13,6 +13,7 @@ func init() {
 	metadata.RegisterHeaderCheck(CheckHeader)
 }
 
+// Reader understands a Jfif byte stream
 type Reader struct {
 	r reader.Reader
 }
@@ -43,12 +44,12 @@ func (r *Reader) Read() int64 {
 			panic(fmt.Errorf("NOOOOO: %s", e))
 		}
 
-		fmt.Printf("\n0x%04x", m)
+		fmt.Printf("0x%04x; ", m)
 
 		m1 := marker(m)
 		if m1 == eoi {
 			// We have reached the end of the file.
-			fmt.Printf("; DONE\n")
+			fmt.Printf("DONE\n")
 			break
 		}
 
@@ -72,12 +73,12 @@ func (r *Reader) Read() int64 {
 
 func (r *Reader) readAppnSegment() {
 	fmt.Printf("app segment")
-	remaining, err := r.r.ReadUint16()
+	rem, err := r.r.ReadUint16()
 	if err != nil {
 		panic(err)
 	}
 
-	remaining -= 2
+	remaining := int64(rem) - 2
 	fmt.Printf("; will read %d bytes", remaining)
 
 	id, err := r.r.ReadNullTerminatedString()
@@ -86,7 +87,7 @@ func (r *Reader) readAppnSegment() {
 	}
 	fmt.Printf("; found identifier: '%s' (%d)", id, len(id))
 
-	remaining -= uint16(len(id))
+	remaining -= int64(len(id))
 
 	// Need to check the type of app segment by the null-terminated string, then
 	// act appropriately.
@@ -102,11 +103,11 @@ func (r *Reader) readAppnSegment() {
 			panic("NOPE")
 		}
 		consumed := r1.Read()
-		remaining -= uint16(consumed)
+		remaining -= consumed
 
-		r.r.Discard(int(remaining))
+		r.r.Discard(int64(remaining))
 	default:
-		r.r.Discard(int(remaining))
+		r.r.Discard(int64(remaining))
 	}
 }
 
@@ -119,7 +120,7 @@ func (r *Reader) moveToNextSegment() {
 
 	s0 := s - 2
 	if s0 > 0 {
-		r.r.Discard(int(s0))
+		r.r.Discard(int64(s0))
 	}
 }
 

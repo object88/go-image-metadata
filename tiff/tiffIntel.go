@@ -40,10 +40,11 @@ func CheckIntelHeader(r io.ReadSeeker) (common.ImageReader, error) {
 }
 
 func (r *IntelReader) Read() int64 {
+	// We have already read the first 4 bytes from the header.
 	start, _ := r.r.GetReader().Seek(0, io.SeekCurrent)
 	start -= 4
-	// We have already read the first 4 bytes from the header.  The next
-	// 4 bytes are the address of the first IFD
+
+	// The next 4 bytes is the address of the first IFD
 	ifdAddress, err := r.r.ReadUint32()
 	if err != nil {
 		panic(fmt.Sprintf("FAILED to read address of 1st IFD: %s", err))
@@ -54,16 +55,30 @@ func (r *IntelReader) Read() int64 {
 		// Loop over all IFD
 		ifdN++
 		fmt.Printf("Moving to IFD #%d at 0x%04x\n", ifdN, ifdAddress)
-		r.r.SeekTo(int(ifdAddress))
+		r.r.SeekTo(int64(ifdAddress))
 
 		count, _ := r.r.ReadUint16()
 		for i := uint16(0); i < count; i++ {
-			tag, _ := r.r.ReadUint16()
-			format, _ := r.r.ReadUint16()
-			componentCount, _ := r.r.ReadUint32()
-			data, _ := r.r.ReadUint32()
+			t, _ := r.r.ReadUint16()
+			f, _ := r.r.ReadUint16()
+			c, _ := r.r.ReadUint32()
+			d, _ := r.r.ReadUint32()
 
-			fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, tag, dataFormat(format), componentCount, data)
+			format := dataFormat(f)
+			if c*d > 4 {
+				// d is a pointer.
+				if format == asciiString {
+					cur := r.r.GetCurrentOffset()
+					r.r.SeekTo(int64(d))
+					s, _ := r.r.ReadNullTerminatedString()
+					fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x: %s\n", ifdN, i, t, format, c, d, s)
+					r.r.SeekTo(cur)
+				} else {
+					fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+				}
+			} else {
+				fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+			}
 		}
 
 		ifdAddress, err = r.r.ReadUint32()

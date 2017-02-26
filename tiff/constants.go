@@ -18,6 +18,19 @@ const (
 	dfloat
 )
 
+type dataFormatMetadata struct {
+	size uint8
+}
+
+var dataFormatMetadatas = map[dataFormat]dataFormatMetadata{
+	ubyte: dataFormatMetadata{
+		size: 1,
+	},
+	asciiString: dataFormatMetadata{
+		size: 1,
+	},
+}
+
 var dataFormats = [...]string{
 	"",
 	"unsignd byte",
