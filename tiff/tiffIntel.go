@@ -78,6 +78,14 @@ func (r *IntelReader) readIfd(ifdAddress uint32) {
 
 			} else {
 				format := common.DataFormat(f)
+				tag, ok := common.TagMap[t]
+				if !ok {
+					// Unknown tag!
+					fmt.Printf("%d-%d: unknown: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+					continue
+				}
+
+				// Found a matching tag.
 				if common.DataFormatSizes[format]*c > 4 {
 					// d is a pointer.
 					if format == common.ASCIIString {
@@ -91,13 +99,13 @@ func (r *IntelReader) readIfd(ifdAddress uint32) {
 						cur := r.r.GetCurrentOffset()
 						r.r.SeekTo(int64(d))
 						s, _ := r.r.ReadNullTerminatedString()
-						fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x: %s\n", ifdN, i, t, format, c, d, s)
+						fmt.Printf("%d-%d: %s, %s, 0x%08x, 0x%08x: %s\n", ifdN, i, tag.Name, format, c, d, s)
 						r.r.SeekTo(cur)
 					} else {
-						fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+						fmt.Printf("%d-%d: %s, %s, 0x%08x, 0x%08x\n", ifdN, i, tag.Name, format, c, d)
 					}
 				} else {
-					fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+					fmt.Printf("%d-%d: %s, %s, 0x%08x, 0x%08x\n", ifdN, i, tag.Name, format, c, d)
 				}
 			}
 		}

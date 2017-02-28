@@ -46,6 +46,8 @@ const (
 	Dfloat
 )
 
+// DataFormatSizes maps a DataFormat to the number of bytes a single instance
+// requires.
 var DataFormatSizes = map[DataFormat]uint32{
 	Ubyte:       1,
 	ASCIIString: 1,
