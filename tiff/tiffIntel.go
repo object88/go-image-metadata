@@ -7,6 +7,7 @@ import (
 	metadata "github.com/object88/go-image-metadata"
 	"github.com/object88/go-image-metadata/common"
 	"github.com/object88/go-image-metadata/reader"
+	"github.com/object88/go-image-metadata/tags"
 )
 
 func init() {
@@ -50,13 +51,17 @@ func (r *IntelReader) Read() int64 {
 		panic(fmt.Sprintf("FAILED to read address of 1st IFD: %s", err))
 	}
 
-	r.readIfd(ifdAddress)
+	r.ReadIfd(ifdAddress)
 
 	cur, _ := r.r.GetReader().Seek(0, io.SeekCurrent)
 	return cur - start
 }
 
-func (r *IntelReader) readIfd(ifdAddress uint32) {
+func (r *IntelReader) GetReader() reader.Reader {
+	return r.r
+}
+
+func (r *IntelReader) ReadIfd(ifdAddress uint32) {
 	ifdN := -1
 	for {
 		// Loop over all IFD
@@ -71,43 +76,23 @@ func (r *IntelReader) readIfd(ifdAddress uint32) {
 			c, _ := r.r.ReadUint32()
 			d, _ := r.r.ReadUint32()
 
-			if t == common.ExifOffset {
-				cur := r.r.GetCurrentOffset()
-				r.readIfd(d)
-				r.r.SeekTo(cur)
-
-			} else {
-				format := common.DataFormat(f)
-				tag, ok := common.TagMap[t]
-				if !ok {
-					// Unknown tag!
-					fmt.Printf("%d-%d: unknown: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
-					continue
-				}
-
-				// Found a matching tag.
-				if common.DataFormatSizes[format]*c > 4 {
-					// d is a pointer.
-					if format == common.ASCIIString {
-						// From the TIFF-v6 spec:
-						// Any ASCII field can contain multiple strings, each terminated with a NUL. A
-						// single string is preferred whenever possible. The Count for multi-string fields is
-						// the number of bytes in all the strings in that field plus their terminating NUL
-						// bytes. Only one NUL is allowed between strings, so that the strings following the
-						// first string will often begin on an odd byte.
-						// ... so this is not sufficient.
-						cur := r.r.GetCurrentOffset()
-						r.r.SeekTo(int64(d))
-						s, _ := r.r.ReadNullTerminatedString()
-						fmt.Printf("%d-%d: %s, %s, 0x%08x, 0x%08x: %s\n", ifdN, i, tag.Name, format, c, d, s)
-						r.r.SeekTo(cur)
-					} else {
-						fmt.Printf("%d-%d: %s, %s, 0x%08x, 0x%08x\n", ifdN, i, tag.Name, format, c, d)
-					}
-				} else {
-					fmt.Printf("%d-%d: %s, %s, 0x%08x, 0x%08x\n", ifdN, i, tag.Name, format, c, d)
-				}
+			format := common.DataFormat(f)
+			tag, ok := tags.TagMap[t]
+			if !ok {
+				// Unknown tag!
+				fmt.Printf("%d-%d: unknown: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+				continue
 			}
+
+			if tag.Initializer == nil {
+				// No initializer provider; ignore.
+				fmt.Printf("%d-%d: no initializer: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+				continue
+			}
+
+			// fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+			m := tag.Initializer(r, tags.TagID(t), format, c, d)
+			fmt.Printf("%d-%d: %s", ifdN, i, m)
 		}
 
 		var ifdReadErr error
