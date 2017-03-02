@@ -7,13 +7,13 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
-type UnsignedIntegerMetadata struct {
-	BaseMetadata
+type UnsignedIntegerTag struct {
+	BaseTag
 	format common.DataFormat
 	value  []uint32
 }
 
-func (m *UnsignedIntegerMetadata) String() string {
+func (m *UnsignedIntegerTag) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString(m.GetName())
 	buffer.WriteString(" (")

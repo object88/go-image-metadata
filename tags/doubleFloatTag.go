@@ -7,12 +7,12 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
-type DoubleFloatMetadata struct {
-	BaseMetadata
+type DoubleFloatTag struct {
+	BaseTag
 	value []float64
 }
 
-func (m *DoubleFloatMetadata) String() string {
+func (m *DoubleFloatTag) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString(m.GetName())
 	buffer.WriteString(" (")

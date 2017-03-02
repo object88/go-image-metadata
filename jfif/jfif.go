@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/object88/go-image-metadata"
+	metadata "github.com/object88/go-image-metadata"
 	"github.com/object88/go-image-metadata/common"
 	"github.com/object88/go-image-metadata/reader"
 )

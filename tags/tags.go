@@ -6,7 +6,7 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
-func defaultInitializer(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+func defaultInitializer(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Tag {
 	dataSize, ok := common.DataFormatSizes[format]
 	if !ok {
 		return nil
@@ -30,7 +30,7 @@ func defaultInitializer(reader TagReader, tag TagID, format common.DataFormat, c
 	return nil
 }
 
-func readASCIIString(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+func readASCIIString(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Tag {
 	// From the TIFF-v6 spec:
 	// Any ASCII field can contain multiple strings, each terminated with a NUL. A
 	// single string is preferred whenever possible. The Count for multi-string fields is
@@ -42,10 +42,10 @@ func readASCIIString(reader TagReader, tag TagID, format common.DataFormat, coun
 	reader.GetReader().SeekTo(int64(data))
 	s, _ := reader.GetReader().ReadNullTerminatedString()
 	reader.GetReader().SeekTo(cur)
-	return &StringMetadata{BaseMetadata{tag}, []string{s}}
+	return &StringTag{BaseTag{tag}, []string{s}}
 }
 
-func readDoubleFloat(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+func readDoubleFloat(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Tag {
 	r := reader.GetReader()
 	cur := r.GetCurrentOffset()
 	r.SeekTo(int64(data))
@@ -55,10 +55,10 @@ func readDoubleFloat(reader TagReader, tag TagID, format common.DataFormat, coun
 		v[i] = float64(n)
 	}
 	r.SeekTo(cur)
-	return &DoubleFloatMetadata{BaseMetadata{tag}, v}
+	return &DoubleFloatTag{BaseTag{tag}, v}
 }
 
-func readSignedInteger(reader TagReader, tag TagID, dataSize uint32, format common.DataFormat, count uint32, data uint32) Metadata {
+func readSignedInteger(reader TagReader, tag TagID, dataSize uint32, format common.DataFormat, count uint32, data uint32) Tag {
 	r := reader.GetReader()
 	v := make([]int32, count)
 	if dataSize*count > 4 {
@@ -82,10 +82,10 @@ func readSignedInteger(reader TagReader, tag TagID, dataSize uint32, format comm
 			v[0] = int32(n)
 		}
 	}
-	return &SignedIntegerMetadata{BaseMetadata{tag}, format, v}
+	return &SignedIntegerTag{BaseTag{tag}, format, v}
 }
 
-func readSignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+func readSignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Tag {
 	r := reader.GetReader()
 	cur := r.GetCurrentOffset()
 	r.SeekTo(int64(data))
@@ -96,10 +96,10 @@ func readSignedRational(reader TagReader, tag TagID, format common.DataFormat, c
 		v[i] = SignedRational{Numerator: int32(n), Denominator: int32(d)}
 	}
 	r.SeekTo(cur)
-	return &SignedRationalMetadata{BaseMetadata{tag}, v}
+	return &SignedRationalTag{BaseTag{tag}, v}
 }
 
-func readSingleFloat(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+func readSingleFloat(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Tag {
 	r := reader.GetReader()
 	v := make([]float32, count)
 	if count == 1 {
@@ -114,10 +114,10 @@ func readSingleFloat(reader TagReader, tag TagID, format common.DataFormat, coun
 		}
 		r.SeekTo(cur)
 	}
-	return &SingleFloatMetadata{BaseMetadata{tag}, v}
+	return &SingleFloatTag{BaseTag{tag}, v}
 }
 
-func readUnsignedInteger(reader TagReader, tag TagID, dataSize uint32, format common.DataFormat, count uint32, data uint32) Metadata {
+func readUnsignedInteger(reader TagReader, tag TagID, dataSize uint32, format common.DataFormat, count uint32, data uint32) Tag {
 	r := reader.GetReader()
 	var v []uint32
 	if dataSize*count > 4 {
@@ -135,10 +135,10 @@ func readUnsignedInteger(reader TagReader, tag TagID, dataSize uint32, format co
 			v = []uint32{data}
 		}
 	}
-	return &UnsignedIntegerMetadata{BaseMetadata{tag}, format, v}
+	return &UnsignedIntegerTag{BaseTag{tag}, format, v}
 }
 
-func readUnsignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+func readUnsignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Tag {
 	r := reader.GetReader()
 	cur := r.GetCurrentOffset()
 	r.SeekTo(int64(data))
@@ -149,7 +149,7 @@ func readUnsignedRational(reader TagReader, tag TagID, format common.DataFormat,
 		v[i] = UnsignedRational{Numerator: n, Denominator: d}
 	}
 	r.SeekTo(cur)
-	return &UnsignedRationalMetadata{BaseMetadata{tag}, v}
+	return &UnsignedRationalTag{BaseTag{tag}, v}
 }
 
 // TagMap is the map of all known tags
@@ -162,7 +162,7 @@ var TagMap = map[uint16]TagBuilder{
 	0x011b: TagBuilder{name: "YResolution"},
 	0x8769: TagBuilder{
 		name: "ExifOffset",
-		initializer: func(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+		initializer: func(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Tag {
 			fmt.Printf("Found ExifBuilder...\n")
 			r := reader.GetReader()
 			cur := r.GetCurrentOffset()

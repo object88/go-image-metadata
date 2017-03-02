@@ -13,12 +13,12 @@ type SignedRational struct {
 	Denominator int32
 }
 
-type SignedRationalMetadata struct {
-	BaseMetadata
+type SignedRationalTag struct {
+	BaseTag
 	value []SignedRational
 }
 
-func (m *SignedRationalMetadata) String() string {
+func (m *SignedRationalTag) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString(m.GetName())
 	buffer.WriteString(" (")

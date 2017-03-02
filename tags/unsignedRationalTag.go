@@ -13,12 +13,12 @@ type UnsignedRational struct {
 	Denominator uint32
 }
 
-type UnsignedRationalMetadata struct {
-	BaseMetadata
+type UnsignedRationalTag struct {
+	BaseTag
 	value []UnsignedRational
 }
 
-func (m *UnsignedRationalMetadata) String() string {
+func (m *UnsignedRationalTag) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString(m.GetName())
 	buffer.WriteString(" (")

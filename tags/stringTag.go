@@ -2,12 +2,12 @@ package tags
 
 import "bytes"
 
-type StringMetadata struct {
-	BaseMetadata
+type StringTag struct {
+	BaseTag
 	value []string
 }
 
-func (m *StringMetadata) String() string {
+func (m *StringTag) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString(m.GetName())
 	buffer.WriteString(" [\"")

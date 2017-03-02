@@ -7,16 +7,16 @@ import (
 	"github.com/object88/go-image-metadata/reader"
 )
 
-// Metadata is a single name-value pair.
-type Metadata interface {
+// Tag is a single name-value pair.
+type Tag interface {
 	fmt.Stringer
 }
 
-// TagID is a metadata identifier
+// TagID is a tag identifier
 type TagID uint16
 
-// TagInitializer takes raw data and returns a Metadata
-type TagInitializer func(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata
+// TagInitializer takes raw data and returns a Tag
+type TagInitializer func(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Tag
 
 type TagReader interface {
 	GetReader() reader.Reader
