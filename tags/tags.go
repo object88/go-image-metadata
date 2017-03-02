@@ -14,8 +14,12 @@ func defaultInitializer(reader TagReader, tag TagID, format common.DataFormat, c
 	switch format {
 	case common.ASCIIString:
 		return readASCIIString(reader, tag, format, count, data)
+	case common.Dfloat:
+		return readDoubleFloat(reader, tag, format, count, data)
 	case common.Sbyte, common.Sshort, common.Slong:
 		return readSignedInteger(reader, tag, dataSize, format, count, data)
+	case common.Sfloat:
+		return readSingleFloat(reader, tag, format, count, data)
 	case common.Srational:
 		return readSignedRational(reader, tag, format, count, data)
 	case common.Ubyte, common.Ushort, common.Ulong:
@@ -39,6 +43,19 @@ func readASCIIString(reader TagReader, tag TagID, format common.DataFormat, coun
 	s, _ := reader.GetReader().ReadNullTerminatedString()
 	reader.GetReader().SeekTo(cur)
 	return &StringMetadata{BaseMetadata{tag}, []string{s}}
+}
+
+func readDoubleFloat(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+	r := reader.GetReader()
+	cur := r.GetCurrentOffset()
+	r.SeekTo(int64(data))
+	v := make([]float64, count)
+	for i := uint32(0); i < count; i++ {
+		n, _ := r.ReadUint64()
+		v[i] = float64(n)
+	}
+	r.SeekTo(cur)
+	return &DoubleFloatMetadata{BaseMetadata{tag}, v}
 }
 
 func readSignedInteger(reader TagReader, tag TagID, dataSize uint32, format common.DataFormat, count uint32, data uint32) Metadata {
@@ -68,6 +85,38 @@ func readSignedInteger(reader TagReader, tag TagID, dataSize uint32, format comm
 	return &SignedIntegerMetadata{BaseMetadata{tag}, format, v}
 }
 
+func readSignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+	r := reader.GetReader()
+	cur := r.GetCurrentOffset()
+	r.SeekTo(int64(data))
+	v := make([]SignedRational, count)
+	for i := uint32(0); i < count; i++ {
+		n, _ := r.ReadUint32()
+		d, _ := r.ReadUint32()
+		v[i] = SignedRational{Numerator: int32(n), Denominator: int32(d)}
+	}
+	r.SeekTo(cur)
+	return &SignedRationalMetadata{BaseMetadata{tag}, v}
+}
+
+func readSingleFloat(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+	r := reader.GetReader()
+	v := make([]float32, count)
+	if count == 1 {
+		n, _ := r.ReadUint32()
+		v[0] = float32(n)
+	} else {
+		cur := r.GetCurrentOffset()
+		r.SeekTo(int64(data))
+		for i := uint32(0); i < count; i++ {
+			n, _ := r.ReadUint32()
+			v[i] = float32(n)
+		}
+		r.SeekTo(cur)
+	}
+	return &SingleFloatMetadata{BaseMetadata{tag}, v}
+}
+
 func readUnsignedInteger(reader TagReader, tag TagID, dataSize uint32, format common.DataFormat, count uint32, data uint32) Metadata {
 	r := reader.GetReader()
 	var v []uint32
@@ -87,22 +136,6 @@ func readUnsignedInteger(reader TagReader, tag TagID, dataSize uint32, format co
 		}
 	}
 	return &UnsignedIntegerMetadata{BaseMetadata{tag}, format, v}
-	// fmt.Printf("0x%04x, %s, 0x%08x, 0x%08x\n", tag, format, count, data)
-	// return nil
-}
-
-func readSignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
-	r := reader.GetReader()
-	cur := r.GetCurrentOffset()
-	r.SeekTo(int64(data))
-	v := make([]SignedRational, count)
-	for i := uint32(0); i < count; i++ {
-		n, _ := r.ReadUint32()
-		d, _ := r.ReadUint32()
-		v[i] = SignedRational{Numerator: int32(n), Denominator: int32(d)}
-	}
-	r.SeekTo(cur)
-	return &SignedRationalMetadata{BaseMetadata{tag}, v}
 }
 
 func readUnsignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
