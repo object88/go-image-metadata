@@ -36,7 +36,7 @@ const (
 	Slong
 
 	// Srational is an 8-byte structure; two sequential signed longs,
-	// representing a numerator and demoninator
+	// representing a numerator and denominator
 	Srational
 
 	// Sfloat is a signed 4 byte floating point number

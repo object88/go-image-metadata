@@ -25,6 +25,11 @@ func (b *BaseMetadata) GetID() TagID {
 	return b.tagID
 }
 
+func (b *BaseMetadata) GetName() string {
+	name := TagMap[uint16(b.tagID)].Name
+	return name
+}
+
 type SignedIntegerMetadata struct {
 	BaseMetadata
 	format common.DataFormat
@@ -32,8 +37,7 @@ type SignedIntegerMetadata struct {
 }
 
 func (m *SignedIntegerMetadata) String() string {
-	name := TagMap[uint16(m.GetID())].Name
-	return fmt.Sprintf("%s, %s, 0x%08x, 0x%08x\n", name, m.format, len(m.value), m.value)
+	return fmt.Sprintf("%s, %s, %d, %#v\n", m.GetName(), m.format, len(m.value), m.value)
 }
 
 type StringMetadata struct {
@@ -42,8 +46,16 @@ type StringMetadata struct {
 }
 
 func (m *StringMetadata) String() string {
-	name := TagMap[uint16(m.GetID())].Name
-	return fmt.Sprintf("%s, %s, 0x%08x, 0x%08x\n", name, common.ASCIIString, len(m.value), m.value)
+	return fmt.Sprintf("%s, %s, %d, %#v\n", m.GetName(), common.ASCIIString, len(m.value), m.value)
+}
+
+type SignedRationalMetadata struct {
+	BaseMetadata
+	value []common.SignedRational
+}
+
+func (m *SignedRationalMetadata) String() string {
+	return fmt.Sprintf("%s, %s, %d, %#v\n", m.GetName(), common.Urational, len(m.value), m.value)
 }
 
 type UnsignedIntegerMetadata struct {
@@ -53,8 +65,16 @@ type UnsignedIntegerMetadata struct {
 }
 
 func (m *UnsignedIntegerMetadata) String() string {
-	name := TagMap[uint16(m.GetID())].Name
-	return fmt.Sprintf("%s, %s, 0x%08x, 0x%08x\n", name, m.format, len(m.value), m.value)
+	return fmt.Sprintf("%s, %s, %d, %#v\n", m.GetName(), m.format, len(m.value), m.value)
+}
+
+type UnsignedRationalMetadata struct {
+	BaseMetadata
+	value []common.UnsignedRational
+}
+
+func (m *UnsignedRationalMetadata) String() string {
+	return fmt.Sprintf("%s, %s, %d, %#v\n", m.GetName(), common.Urational, len(m.value), m.value)
 }
 
 // TagID is a metadata identifier
@@ -76,7 +96,6 @@ func ReadASCIIString(reader TagReader, tag TagID, format common.DataFormat, coun
 	cur := reader.GetReader().GetCurrentOffset()
 	reader.GetReader().SeekTo(int64(data))
 	s, _ := reader.GetReader().ReadNullTerminatedString()
-	// fmt.Printf("%d-%d: %s, %s, 0x%08x, 0x%08x: %s\n", ifdN, i, tag.Name, format, c, d, s)
 	reader.GetReader().SeekTo(cur)
 	return &StringMetadata{BaseMetadata{tag}, []string{s}}
 }
@@ -90,7 +109,7 @@ func ReadInteger(reader TagReader, tag TagID, format common.DataFormat, count ui
 	case common.Ubyte, common.Ushort, common.Ulong:
 		return readUnsignedInteger(reader, tag, dataSize, format, count, data)
 	case common.Sbyte, common.Sshort, common.Slong:
-		return nil
+		return readSignedInteger(reader, tag, dataSize, format, count, data)
 	default:
 		return nil
 	}
@@ -151,6 +170,47 @@ func readUnsignedInteger(reader TagReader, tag TagID, dataSize uint32, format co
 	return &UnsignedIntegerMetadata{BaseMetadata{tag}, format, v}
 }
 
+func readSignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+	r := reader.GetReader()
+	cur := r.GetCurrentOffset()
+	r.SeekTo(int64(data))
+	v := make([]common.SignedRational, count)
+	for i := uint32(0); i < count; i++ {
+		n, _ := r.ReadUint32()
+		d, _ := r.ReadUint32()
+		v[i] = common.SignedRational{Numerator: int32(n), Denominator: int32(d)}
+	}
+	r.SeekTo(cur)
+	return &SignedRationalMetadata{BaseMetadata{tag}, v}
+}
+
+func readUnsignedRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+	r := reader.GetReader()
+	cur := r.GetCurrentOffset()
+	r.SeekTo(int64(data))
+	v := make([]common.UnsignedRational, count)
+	for i := uint32(0); i < count; i++ {
+		n, _ := r.ReadUint32()
+		d, _ := r.ReadUint32()
+		v[i] = common.UnsignedRational{Numerator: n, Denominator: d}
+	}
+	r.SeekTo(cur)
+	return &UnsignedRationalMetadata{BaseMetadata{tag}, v}
+}
+
+func ReadRational(reader TagReader, tag TagID, format common.DataFormat, count uint32, data uint32) Metadata {
+	_, ok := common.DataFormatSizes[format]
+	if !ok {
+		return nil
+	}
+	if format == common.Urational {
+		return readUnsignedRational(reader, tag, format, count, data)
+	} else if format == common.Srational {
+		return readSignedRational(reader, tag, format, count, data)
+	}
+	return nil
+}
+
 // TagMap is the map of all known tags
 var TagMap = map[uint16]TagBuilder{
 	0x010e: TagBuilder{
@@ -164,6 +224,18 @@ var TagMap = map[uint16]TagBuilder{
 	0x0110: TagBuilder{
 		Name:        "Model",
 		Initializer: ReadASCIIString,
+	},
+	0x0112: TagBuilder{
+		Name:        "Orientation",
+		Initializer: ReadInteger,
+	},
+	0x011a: TagBuilder{
+		Name:        "XResolution",
+		Initializer: ReadRational,
+	},
+	0x011b: TagBuilder{
+		Name:        "YResolution",
+		Initializer: ReadRational,
 	},
 	0x8769: TagBuilder{
 		Name: "ExifOffset",
