@@ -84,14 +84,9 @@ func (r *IntelReader) ReadIfd(ifdAddress uint32) {
 				continue
 			}
 
-			if tag.Initializer == nil {
-				// No initializer provider; ignore.
-				fmt.Printf("%d-%d: no initializer: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
-				continue
-			}
-
 			// fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
-			m := tag.Initializer(r, tags.TagID(t), format, c, d)
+			initializer := tag.GetInitializer()
+			m := initializer(r, tags.TagID(t), format, c, d)
 			fmt.Printf("%d-%d: %s\n", ifdN, i, m)
 		}
 

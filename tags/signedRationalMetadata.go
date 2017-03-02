@@ -7,9 +7,15 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
+// SignedRational is a fractional representation of an signed number
+type SignedRational struct {
+	Numerator   int32
+	Denominator int32
+}
+
 type SignedRationalMetadata struct {
 	BaseMetadata
-	value []common.SignedRational
+	value []SignedRational
 }
 
 func (m *SignedRationalMetadata) String() string {

@@ -9,6 +9,6 @@ func (b *BaseMetadata) GetID() TagID {
 }
 
 func (b *BaseMetadata) GetName() string {
-	name := TagMap[uint16(b.tagID)].Name
-	return name
+	tagBuilder := TagMap[uint16(b.tagID)]
+	return tagBuilder.GetName()
 }

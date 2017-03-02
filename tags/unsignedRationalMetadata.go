@@ -7,9 +7,15 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
+// UnsignedRational is a fractional representation of an unsigned number
+type UnsignedRational struct {
+	Numerator   uint32
+	Denominator uint32
+}
+
 type UnsignedRationalMetadata struct {
 	BaseMetadata
-	value []common.UnsignedRational
+	value []UnsignedRational
 }
 
 func (m *UnsignedRationalMetadata) String() string {

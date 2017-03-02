@@ -22,8 +22,12 @@ type Reader interface {
 	// ReadUint8 reads an unsigned 8-bit value
 	ReadUint8() (uint8, error)
 
+	ReadUint8FromUint32(count, data uint32) ([]uint32, error)
+
 	// ReadUint16 reads an unsigned 16-bit value
 	ReadUint16() (uint16, error)
+
+	ReadUint16FromUint32(count, data uint32) ([]uint32, error)
 
 	// ReadUint32 reads an unsigned 32-bit value
 	ReadUint32() (uint32, error)
