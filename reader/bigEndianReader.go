@@ -17,6 +17,7 @@ func CreateBigEndianReader(r io.ReadSeeker, baseOffset int64) Reader {
 	}
 }
 
+// ReadUint8FromUint32 reads uint8s off the provided uint32, up to a maximum of count
 func (r *BigEndianReader) ReadUint8FromUint32(count, data uint32) ([]uint32, error) {
 	result := make([]uint32, count)
 	result[0] = data & 0xff
@@ -41,6 +42,7 @@ func (r *BigEndianReader) ReadUint16() (uint16, error) {
 	return binary.BigEndian.Uint16(t), nil
 }
 
+// ReadUint16FromUint32 reads uint16s off the provided uint32, up to a maximum of count
 func (r *BigEndianReader) ReadUint16FromUint32(count, data uint32) ([]uint32, error) {
 	result := make([]uint32, count)
 	result[0] = data & 0xffff

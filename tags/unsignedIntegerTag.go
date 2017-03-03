@@ -22,7 +22,7 @@ func (m *UnsignedIntegerTag) String() string {
 	for k, v := range m.value {
 		buffer.WriteString(strconv.Itoa(int(v)))
 		if k != len(m.value)-1 {
-			buffer.WriteString("\", \"")
+			buffer.WriteString(", ")
 		}
 	}
 	buffer.WriteString("]")
