@@ -51,7 +51,7 @@ func (r *IntelReader) Read() int64 {
 		panic(fmt.Sprintf("FAILED to read address of 1st IFD: %s", err))
 	}
 
-	r.ReadIfd(ifdAddress)
+	r.ReadIfd(ifdAddress, tags.TagMap)
 
 	cur, _ := r.r.GetReader().Seek(0, io.SeekCurrent)
 	return cur - start
@@ -61,7 +61,7 @@ func (r *IntelReader) GetReader() reader.Reader {
 	return r.r
 }
 
-func (r *IntelReader) ReadIfd(ifdAddress uint32) {
+func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMap map[uint16]tags.TagBuilder) {
 	ifdN := -1
 	for {
 		// Loop over all IFD
@@ -77,7 +77,7 @@ func (r *IntelReader) ReadIfd(ifdAddress uint32) {
 			d, _ := r.r.ReadUint32()
 
 			format := common.DataFormat(f)
-			tag, ok := tags.TagMap[t]
+			tag, ok := tagMap[t]
 			if !ok {
 				// Unknown tag!
 				fmt.Printf("%d-%d: unknown: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
@@ -86,7 +86,7 @@ func (r *IntelReader) ReadIfd(ifdAddress uint32) {
 
 			// fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
 			initializer := tag.GetInitializer()
-			m, ok, err := initializer(r, tags.TagID(t), format, c, d)
+			m, ok, err := initializer(r, tags.TagID(t), tag.GetName(), format, c, d)
 			if err != nil {
 				continue
 			}
