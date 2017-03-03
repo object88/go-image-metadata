@@ -28,3 +28,24 @@ func (m *UnsignedIntegerTag) String() string {
 	buffer.WriteString("]")
 	return buffer.String()
 }
+
+func readUnsignedInteger(reader TagReader, tag TagID, name string, dataSize uint32, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+	r := reader.GetReader()
+	var v []uint32
+	if dataSize*count > 4 {
+		v = make([]uint32, count)
+		cur := r.GetCurrentOffset()
+		r.SeekTo(int64(data))
+		// Read off the string of numbers...
+		r.SeekTo(cur)
+	} else {
+		if format == common.Ubyte {
+			v, _ = r.ReadUint8FromUint32(count, data)
+		} else if format == common.Ushort {
+			v, _ = r.ReadUint16FromUint32(count, data)
+		} else if format == common.Ulong {
+			v = []uint32{data}
+		}
+	}
+	return &UnsignedIntegerTag{BaseTag{name, tag}, format, v}, true, nil
+}

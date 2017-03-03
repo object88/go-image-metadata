@@ -28,3 +28,16 @@ func (m *DoubleFloatTag) String() string {
 	buffer.WriteString("]")
 	return buffer.String()
 }
+
+func readDoubleFloat(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+	r := reader.GetReader()
+	cur := r.GetCurrentOffset()
+	r.SeekTo(int64(data))
+	v := make([]float64, count)
+	for i := uint32(0); i < count; i++ {
+		n, _ := r.ReadUint64()
+		v[i] = float64(n)
+	}
+	r.SeekTo(cur)
+	return &DoubleFloatTag{BaseTag{name, tag}, v}, true, nil
+}

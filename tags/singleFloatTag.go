@@ -28,3 +28,21 @@ func (m *SingleFloatTag) String() string {
 	buffer.WriteString("]")
 	return buffer.String()
 }
+
+func readSingleFloat(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+	r := reader.GetReader()
+	v := make([]float32, count)
+	if count == 1 {
+		n, _ := r.ReadUint32()
+		v[0] = float32(n)
+	} else {
+		cur := r.GetCurrentOffset()
+		r.SeekTo(int64(data))
+		for i := uint32(0); i < count; i++ {
+			n, _ := r.ReadUint32()
+			v[i] = float32(n)
+		}
+		r.SeekTo(cur)
+	}
+	return &SingleFloatTag{BaseTag{name, tag}, v}, true, nil
+}

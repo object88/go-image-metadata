@@ -35,3 +35,17 @@ func (m *SignedRationalTag) String() string {
 	buffer.WriteString("]")
 	return buffer.String()
 }
+
+func readSignedRational(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+	r := reader.GetReader()
+	cur := r.GetCurrentOffset()
+	r.SeekTo(int64(data))
+	v := make([]SignedRational, count)
+	for i := uint32(0); i < count; i++ {
+		n, _ := r.ReadUint32()
+		d, _ := r.ReadUint32()
+		v[i] = SignedRational{Numerator: int32(n), Denominator: int32(d)}
+	}
+	r.SeekTo(cur)
+	return &SignedRationalTag{BaseTag{name, tag}, v}, true, nil
+}

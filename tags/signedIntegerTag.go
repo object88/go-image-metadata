@@ -28,3 +28,30 @@ func (m *SignedIntegerTag) String() string {
 	buffer.WriteString("]")
 	return buffer.String()
 }
+
+func readSignedInteger(reader TagReader, tag TagID, name string, dataSize uint32, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+	r := reader.GetReader()
+	v := make([]int32, count)
+	if dataSize*count > 4 {
+		cur := r.GetCurrentOffset()
+		r.SeekTo(int64(data))
+		// Read off the string of numbers...
+		r.SeekTo(cur)
+	} else {
+		if format == common.Sbyte {
+			for i := uint32(0); i < count; i++ {
+				n, _ := r.ReadUint8()
+				v[i] = int32(n)
+			}
+		} else if format == common.Sshort {
+			for i := uint32(0); i < count; i++ {
+				n, _ := r.ReadUint16()
+				v[i] = int32(n)
+			}
+		} else if format == common.Slong {
+			n, _ := r.ReadUint32()
+			v[0] = int32(n)
+		}
+	}
+	return &SignedIntegerTag{BaseTag{name, tag}, format, v}, true, nil
+}

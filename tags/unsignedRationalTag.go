@@ -35,3 +35,17 @@ func (m *UnsignedRationalTag) String() string {
 	buffer.WriteString("]")
 	return buffer.String()
 }
+
+func readUnsignedRational(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+	r := reader.GetReader()
+	cur := r.GetCurrentOffset()
+	r.SeekTo(int64(data))
+	v := make([]UnsignedRational, count)
+	for i := uint32(0); i < count; i++ {
+		n, _ := r.ReadUint32()
+		d, _ := r.ReadUint32()
+		v[i] = UnsignedRational{Numerator: n, Denominator: d}
+	}
+	r.SeekTo(cur)
+	return &UnsignedRationalTag{BaseTag{name, tag}, v}, true, nil
+}
