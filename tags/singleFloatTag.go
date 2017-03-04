@@ -7,6 +7,7 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
+// SingleFloatTag holds an array of 4-byte (32 bit) floats
 type SingleFloatTag struct {
 	BaseTag
 	value []float32

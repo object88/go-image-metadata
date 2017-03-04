@@ -6,6 +6,7 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
+// StringTag holds an array of strings
 type StringTag struct {
 	BaseTag
 	value []string

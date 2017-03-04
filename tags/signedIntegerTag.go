@@ -7,6 +7,8 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
+// SignedIntegerTag holds an array of integers.  All values are stored as
+// 32 bits, but the type represents 8, 16, and 32 bit signed integers.
 type SignedIntegerTag struct {
 	BaseTag
 	format common.DataFormat

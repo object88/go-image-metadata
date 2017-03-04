@@ -13,6 +13,7 @@ type UnsignedRational struct {
 	Denominator uint32
 }
 
+// UnsignedRationalTag holds an array of unsigned rationals.
 type UnsignedRationalTag struct {
 	BaseTag
 	value []UnsignedRational

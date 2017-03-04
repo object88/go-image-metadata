@@ -7,6 +7,7 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
+// DoubleFloatTag holds an array of 8-byte (64 bit) floats
 type DoubleFloatTag struct {
 	BaseTag
 	value []float64
