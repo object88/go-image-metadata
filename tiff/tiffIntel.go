@@ -57,7 +57,7 @@ func (r *IntelReader) ReadPartial(foundTags *map[uint16]tags.Tag) int64 {
 		panic(fmt.Sprintf("FAILED to read address of 1st IFD: %s", err))
 	}
 
-	r.ReadIfd(ifdAddress, tags.TagMap, foundTags)
+	r.ReadIfd(ifdAddress, []*map[uint16]tags.TagBuilder{&tags.TagMap}, foundTags)
 
 	cur, _ := r.r.GetReader().Seek(0, io.SeekCurrent)
 	return cur - start
@@ -67,7 +67,7 @@ func (r *IntelReader) GetReader() reader.Reader {
 	return r.r
 }
 
-func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMap map[uint16]tags.TagBuilder, foundTags *map[uint16]tags.Tag) {
+func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMaps []*map[uint16]tags.TagBuilder, foundTags *map[uint16]tags.Tag) {
 	ifdN := -1
 	for {
 		// Loop over all IFD
@@ -83,28 +83,37 @@ func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMap map[uint16]tags.TagBuild
 			d, _ := r.r.ReadUint32()
 
 			format := common.DataFormat(f)
-			tag, ok := tagMap[t]
-			if !ok {
+
+			matched := false
+			for _, tagMap := range tagMaps {
+				tag, ok := (*tagMap)[t]
+				if !ok {
+					continue
+				}
+
+				// fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
+				initializer := tag.GetInitializer()
+				m, ok, err := initializer(r, foundTags, tags.TagID(t), tag.GetName(), format, c, d)
+				if err != nil {
+					continue
+				}
+				if !ok {
+					continue
+				}
+
+				if m != nil {
+					fmt.Printf("%d-%d: %s\n", ifdN, i, m)
+					(*foundTags)[t] = m
+				}
+
+				matched = true
+				break
+			}
+
+			if !matched {
 				// Unknown tag!
 				fmt.Printf("%d-%d: unknown: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
-				continue
 			}
-
-			// fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
-			initializer := tag.GetInitializer()
-			m, ok, err := initializer(r, foundTags, tags.TagID(t), tag.GetName(), format, c, d)
-			if err != nil {
-				continue
-			}
-			if !ok {
-				continue
-			}
-			if m != nil {
-				fmt.Printf("%d-%d: %s\n", ifdN, i, m)
-				continue
-			}
-
-			(*foundTags)[t] = m
 		}
 
 		var ifdReadErr error

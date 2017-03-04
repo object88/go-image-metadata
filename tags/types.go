@@ -22,5 +22,5 @@ type TagInitializer func(reader TagReader, foundTags *map[uint16]Tag, tag TagID,
 // Tags and putting them in foundTags.
 type TagReader interface {
 	GetReader() reader.Reader
-	ReadIfd(ifdAddress uint32, tags map[uint16]TagBuilder, foundTags *map[uint16]Tag)
+	ReadIfd(ifdAddress uint32, tags []*map[uint16]TagBuilder, foundTags *map[uint16]Tag)
 }
