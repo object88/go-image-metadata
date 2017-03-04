@@ -5,8 +5,8 @@ import (
 	"io"
 
 	metadata "github.com/object88/go-image-metadata"
-	"github.com/object88/go-image-metadata/common"
 	"github.com/object88/go-image-metadata/reader"
+	"github.com/object88/go-image-metadata/tags"
 )
 
 func init() {
@@ -18,7 +18,7 @@ type MotorolaReader struct {
 	r reader.Reader
 }
 
-func CheckMotorolaHeader(r io.ReadSeeker) (common.ImageReader, error) {
+func CheckMotorolaHeader(r io.ReadSeeker) (metadata.ImageReader, error) {
 	fmt.Printf("Checking motorola tiff header... ")
 	cur, _ := r.Seek(0, io.SeekCurrent)
 	b := []byte{0x00, 0x00, 0x00, 0x00}
@@ -37,6 +37,10 @@ func CheckMotorolaHeader(r io.ReadSeeker) (common.ImageReader, error) {
 	return &MotorolaReader{r: reader.CreateBigEndianReader(r, cur)}, nil
 }
 
-func (r *MotorolaReader) Read() int64 {
+func (r *MotorolaReader) Read() map[uint16]tags.Tag {
+	return nil
+}
+
+func (r *MotorolaReader) ReadPartial() int64 {
 	return 0
 }

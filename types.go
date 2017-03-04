@@ -2,8 +2,6 @@ package metadata
 
 import (
 	"io"
-
-	"github.com/object88/go-image-metadata/common"
 )
 
 type marker uint16
@@ -20,4 +18,4 @@ type markerSegment struct {
 // implementor, an ImageReader should be returned.  An error should only be
 // returned if there is a problem reading the byte stream, not in the case of
 // non-conformity.
-type CheckHeader func(reader io.ReadSeeker) (common.ImageReader, error)
+type CheckHeader func(reader io.ReadSeeker) (ImageReader, error)

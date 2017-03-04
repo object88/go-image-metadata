@@ -73,5 +73,5 @@ func Test_File(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error while reading header: %s\n", err)
 	}
-	ir.Read()
+	ir.ReadPartial()
 }

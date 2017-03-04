@@ -5,8 +5,8 @@ import (
 	"io"
 
 	metadata "github.com/object88/go-image-metadata"
-	"github.com/object88/go-image-metadata/common"
 	"github.com/object88/go-image-metadata/reader"
+	"github.com/object88/go-image-metadata/tags"
 )
 
 func init() {
@@ -19,7 +19,7 @@ type Reader struct {
 }
 
 // CheckHeader checks the byte stream to see if it contains a JFIF
-func CheckHeader(r io.ReadSeeker) (common.ImageReader, error) {
+func CheckHeader(r io.ReadSeeker) (metadata.ImageReader, error) {
 	fmt.Printf("Checking jfif header... ")
 	cur, _ := r.Seek(0, io.SeekCurrent)
 	b := []byte{0x00, 0x00}
@@ -36,7 +36,11 @@ func CheckHeader(r io.ReadSeeker) (common.ImageReader, error) {
 	return &Reader{r: reader.CreateBigEndianReader(r, cur)}, nil
 }
 
-func (r *Reader) Read() int64 {
+func (r *Reader) Read() map[uint16]tags.Tag {
+	return nil
+}
+
+func (r *Reader) ReadPartial() int64 {
 	// Loop over marker segments
 	for {
 		m, e := r.r.ReadUint16()
@@ -102,7 +106,7 @@ func (r *Reader) readAppnSegment() {
 		if err != nil {
 			panic("NOPE")
 		}
-		consumed := r1.Read()
+		consumed := r1.ReadPartial()
 		remaining -= consumed
 
 		r.r.Discard(int64(remaining))

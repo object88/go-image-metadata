@@ -19,7 +19,7 @@ type IntelReader struct {
 	r reader.Reader
 }
 
-func CheckIntelHeader(r io.ReadSeeker) (common.ImageReader, error) {
+func CheckIntelHeader(r io.ReadSeeker) (metadata.ImageReader, error) {
 	fmt.Printf("Checking intel tiff header... ")
 
 	cur, _ := r.Seek(0, io.SeekCurrent)
@@ -40,7 +40,11 @@ func CheckIntelHeader(r io.ReadSeeker) (common.ImageReader, error) {
 	return &IntelReader{r: reader.CreateLittleEndianReader(r, cur)}, nil
 }
 
-func (r *IntelReader) Read() int64 {
+func (r *IntelReader) Read() map[uint16]tags.Tag {
+	return nil
+}
+
+func (r *IntelReader) ReadPartial() int64 {
 	// We have already read the first 4 bytes from the header.
 	start, _ := r.r.GetReader().Seek(0, io.SeekCurrent)
 	start -= 4

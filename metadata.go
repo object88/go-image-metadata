@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"github.com/object88/go-image-metadata/common"
 )
 
 var readers []CheckHeader
@@ -14,7 +12,7 @@ func RegisterHeaderCheck(fn CheckHeader) {
 	readers = append(readers, fn)
 }
 
-func ReadHeader(reader io.ReadSeeker) (common.ImageReader, error) {
+func ReadHeader(reader io.ReadSeeker) (ImageReader, error) {
 	start, err := reader.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return nil, err
