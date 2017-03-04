@@ -41,10 +41,12 @@ func CheckIntelHeader(r io.ReadSeeker) (metadata.ImageReader, error) {
 }
 
 func (r *IntelReader) Read() map[uint16]tags.Tag {
-	return nil
+	m := map[uint16]tags.Tag{}
+	r.ReadPartial(&m)
+	return m
 }
 
-func (r *IntelReader) ReadPartial() int64 {
+func (r *IntelReader) ReadPartial(foundTags *map[uint16]tags.Tag) int64 {
 	// We have already read the first 4 bytes from the header.
 	start, _ := r.r.GetReader().Seek(0, io.SeekCurrent)
 	start -= 4
@@ -55,7 +57,7 @@ func (r *IntelReader) ReadPartial() int64 {
 		panic(fmt.Sprintf("FAILED to read address of 1st IFD: %s", err))
 	}
 
-	r.ReadIfd(ifdAddress, tags.TagMap)
+	r.ReadIfd(ifdAddress, tags.TagMap, foundTags)
 
 	cur, _ := r.r.GetReader().Seek(0, io.SeekCurrent)
 	return cur - start
@@ -65,7 +67,7 @@ func (r *IntelReader) GetReader() reader.Reader {
 	return r.r
 }
 
-func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMap map[uint16]tags.TagBuilder) {
+func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMap map[uint16]tags.TagBuilder, foundTags *map[uint16]tags.Tag) {
 	ifdN := -1
 	for {
 		// Loop over all IFD
@@ -90,7 +92,7 @@ func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMap map[uint16]tags.TagBuild
 
 			// fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
 			initializer := tag.GetInitializer()
-			m, ok, err := initializer(r, tags.TagID(t), tag.GetName(), format, c, d)
+			m, ok, err := initializer(r, foundTags, tags.TagID(t), tag.GetName(), format, c, d)
 			if err != nil {
 				continue
 			}
@@ -99,7 +101,10 @@ func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMap map[uint16]tags.TagBuild
 			}
 			if m != nil {
 				fmt.Printf("%d-%d: %s\n", ifdN, i, m)
+				continue
 			}
+
+			(*foundTags)[t] = m
 		}
 
 		var ifdReadErr error

@@ -73,5 +73,11 @@ func Test_File(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error while reading header: %s\n", err)
 	}
-	ir.ReadPartial()
+	m := ir.Read()
+	if m == nil {
+		t.Fatalf("Failed to return map from Read method")
+	}
+	if len(m) == 0 {
+		t.Fatalf("Failed to return populated map from Read method")
+	}
 }

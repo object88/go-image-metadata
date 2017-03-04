@@ -16,9 +16,9 @@ type Tag interface {
 type TagID uint16
 
 // TagInitializer takes raw data and returns a Tag
-type TagInitializer func(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error)
+type TagInitializer func(reader TagReader, foundTags *map[uint16]Tag, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error)
 
 type TagReader interface {
 	GetReader() reader.Reader
-	ReadIfd(ifdAddress uint32, tags map[uint16]TagBuilder)
+	ReadIfd(ifdAddress uint32, tags map[uint16]TagBuilder, foundTags *map[uint16]Tag)
 }

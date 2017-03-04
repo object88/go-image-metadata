@@ -7,7 +7,7 @@ import (
 	"github.com/object88/go-image-metadata/common"
 )
 
-func defaultInitializer(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+func defaultInitializer(reader TagReader, _ *map[uint16]Tag, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
 	dataSize, ok := common.DataFormatSizes[format]
 	if !ok {
 		return nil, false, errors.New("Do not have matching data format size")
@@ -153,11 +153,11 @@ var TagMap = map[uint16]TagBuilder{
 	0x8649: TagBuilder{name: "Photoshop"},
 	0x8769: TagBuilder{
 		name: "Exif IFD",
-		initializer: func(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+		initializer: func(reader TagReader, foundTags *map[uint16]Tag, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
 			fmt.Printf("Found ExifBuilder...\n")
 			r := reader.GetReader()
 			cur := r.GetCurrentOffset()
-			reader.ReadIfd(data, ExifTagMap)
+			reader.ReadIfd(data, ExifTagMap, foundTags)
 			r.SeekTo(cur)
 			return nil, true, nil
 		},
@@ -168,11 +168,11 @@ var TagMap = map[uint16]TagBuilder{
 	0x87B1: TagBuilder{name: "GeoAsciiParamsTag"},
 	0x8825: TagBuilder{
 		name: "GPS IFD",
-		initializer: func(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+		initializer: func(reader TagReader, foundTags *map[uint16]Tag, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
 			fmt.Printf("Found GPS IFD...\n")
 			r := reader.GetReader()
 			cur := r.GetCurrentOffset()
-			reader.ReadIfd(data, GpsTagMap)
+			reader.ReadIfd(data, GpsTagMap, foundTags)
 			r.SeekTo(cur)
 			return nil, true, nil
 		},

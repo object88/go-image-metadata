@@ -37,10 +37,12 @@ func CheckHeader(r io.ReadSeeker) (metadata.ImageReader, error) {
 }
 
 func (r *Reader) Read() map[uint16]tags.Tag {
-	return nil
+	m := map[uint16]tags.Tag{}
+	r.ReadPartial(&m)
+	return m
 }
 
-func (r *Reader) ReadPartial() int64 {
+func (r *Reader) ReadPartial(foundTags *map[uint16]tags.Tag) int64 {
 	// Loop over marker segments
 	for {
 		m, e := r.r.ReadUint16()
@@ -59,7 +61,7 @@ func (r *Reader) ReadPartial() int64 {
 
 		if m&0xffe0 == 0xffe0 {
 			// We have an appN segment.
-			r.readAppnSegment()
+			r.readAppnSegment(foundTags)
 		} else if m1 == soi || m^0xffd0>>3 == 0 {
 			// Restart: 0xffd0-0xffd7; nothing to process.
 			fmt.Printf("got restart\n")
@@ -75,7 +77,7 @@ func (r *Reader) ReadPartial() int64 {
 	return 0
 }
 
-func (r *Reader) readAppnSegment() {
+func (r *Reader) readAppnSegment(foundTags *map[uint16]tags.Tag) {
 	fmt.Printf("app segment")
 	rem, err := r.r.ReadUint16()
 	if err != nil {
@@ -106,7 +108,7 @@ func (r *Reader) readAppnSegment() {
 		if err != nil {
 			panic("NOPE")
 		}
-		consumed := r1.ReadPartial()
+		consumed := r1.ReadPartial(foundTags)
 		remaining -= consumed
 
 		r.r.Discard(int64(remaining))

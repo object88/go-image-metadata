@@ -38,9 +38,11 @@ func CheckMotorolaHeader(r io.ReadSeeker) (metadata.ImageReader, error) {
 }
 
 func (r *MotorolaReader) Read() map[uint16]tags.Tag {
-	return nil
+	m := map[uint16]tags.Tag{}
+	r.ReadPartial(&m)
+	return m
 }
 
-func (r *MotorolaReader) ReadPartial() int64 {
+func (r *MotorolaReader) ReadPartial(foundTags *map[uint16]tags.Tag) int64 {
 	return 0
 }
