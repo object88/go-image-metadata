@@ -18,6 +18,8 @@ type MotorolaReader struct {
 	r reader.Reader
 }
 
+// CheckMotorolaHeader peeks at the byte stream for the magic numbers to
+// identify this as a TIFF image with big-endian encoding.
 func CheckMotorolaHeader(r io.ReadSeeker) (metadata.ImageReader, error) {
 	fmt.Printf("Checking motorola tiff header... ")
 	cur, _ := r.Seek(0, io.SeekCurrent)

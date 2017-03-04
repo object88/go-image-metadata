@@ -8,10 +8,14 @@ import (
 
 var readers []CheckHeader
 
+// RegisterHeaderCheck adds a CheckHeader method to the internal collection,
+// to handle more image formats
 func RegisterHeaderCheck(fn CheckHeader) {
 	readers = append(readers, fn)
 }
 
+// ReadHeader loops over the collection of HeaderCheck methods to determine
+// which ImageReader implementation to use
 func ReadHeader(reader io.ReadSeeker) (ImageReader, error) {
 	start, err := reader.Seek(0, io.SeekCurrent)
 	if err != nil {

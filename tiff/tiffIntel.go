@@ -19,6 +19,8 @@ type IntelReader struct {
 	r reader.Reader
 }
 
+// CheckIntelHeader peeks at the byte stream for the magic numbers to identify
+// this as a TIFF image with little-endian encoding.
 func CheckIntelHeader(r io.ReadSeeker) (metadata.ImageReader, error) {
 	fmt.Printf("Checking intel tiff header... ")
 
