@@ -30,20 +30,20 @@ func (m *SingleFloatTag) String() string {
 	return buffer.String()
 }
 
-func readSingleFloat(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+func readSingleFloat(reader TagReader, name string, raw *RawTagData) (Tag, bool, error) {
 	r := reader.GetReader()
-	v := make([]float32, count)
-	if count == 1 {
+	v := make([]float32, raw.Count)
+	if raw.Count == 1 {
 		n, _ := r.ReadUint32()
 		v[0] = float32(n)
 	} else {
 		cur := r.GetCurrentOffset()
-		r.SeekTo(int64(data))
-		for i := uint32(0); i < count; i++ {
+		r.SeekTo(int64(raw.Data))
+		for i := uint32(0); i < raw.Count; i++ {
 			n, _ := r.ReadUint32()
 			v[i] = float32(n)
 		}
 		r.SeekTo(cur)
 	}
-	return &SingleFloatTag{BaseTag{name, tag, format}, v}, true, nil
+	return &SingleFloatTag{BaseTag{name, raw.Tag, raw.Format}, v}, true, nil
 }

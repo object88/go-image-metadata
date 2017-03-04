@@ -2,8 +2,6 @@ package tags
 
 import (
 	"bytes"
-
-	"github.com/object88/go-image-metadata/common"
 )
 
 // StringTag holds an array of strings
@@ -26,7 +24,7 @@ func (m *StringTag) String() string {
 	return buffer.String()
 }
 
-func readASCIIString(reader TagReader, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+func readASCIIString(reader TagReader, name string, raw *RawTagData) (Tag, bool, error) {
 	// From the TIFF-v6 spec:
 	// Any ASCII field can contain multiple strings, each terminated with a NUL. A
 	// single string is preferred whenever possible. The Count for multi-string fields is
@@ -35,8 +33,8 @@ func readASCIIString(reader TagReader, tag TagID, name string, format common.Dat
 	// first string will often begin on an odd byte.
 	// ... so this is not sufficient.
 	cur := reader.GetReader().GetCurrentOffset()
-	reader.GetReader().SeekTo(int64(data))
+	reader.GetReader().SeekTo(int64(raw.Data))
 	s, _ := reader.GetReader().ReadNullTerminatedString()
 	reader.GetReader().SeekTo(cur)
-	return &StringTag{BaseTag{name, tag, format}, []string{s}}, true, nil
+	return &StringTag{BaseTag{name, raw.Tag, raw.Format}, []string{s}}, true, nil
 }

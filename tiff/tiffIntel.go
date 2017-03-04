@@ -83,8 +83,9 @@ func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMaps []*map[uint16]tags.TagB
 			f, _ := r.r.ReadUint16()
 			c, _ := r.r.ReadUint32()
 			d, _ := r.r.ReadUint32()
-
 			format := common.DataFormat(f)
+			tagID := tags.TagID(t)
+			raw := &tags.RawTagData{Tag: tagID, Format: format, Count: c, Data: d}
 
 			matched := false
 			for _, tagMap := range tagMaps {
@@ -95,7 +96,7 @@ func (r *IntelReader) ReadIfd(ifdAddress uint32, tagMaps []*map[uint16]tags.TagB
 
 				// fmt.Printf("%d-%d: 0x%04x, %s, 0x%08x, 0x%08x\n", ifdN, i, t, format, c, d)
 				initializer := tag.GetInitializer()
-				m, ok, err := initializer(r, foundTags, tags.TagID(t), tag.GetName(), format, c, d)
+				m, ok, err := initializer(r, foundTags, tag.GetName(), raw)
 				if err != nil {
 					continue
 				}

@@ -144,10 +144,10 @@ func init() {
 		0x8649: TagBuilder{name: "Photoshop"},
 		0x8769: TagBuilder{
 			name: "Exif IFD",
-			initializer: func(reader TagReader, foundTags *map[uint16]Tag, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+			initializer: func(reader TagReader, foundTags *map[uint16]Tag, name string, raw *RawTagData) (Tag, bool, error) {
 				r := reader.GetReader()
 				cur := r.GetCurrentOffset()
-				reader.ReadIfd(data, []*map[uint16]TagBuilder{&ExifTagMap, &TagMap}, foundTags)
+				reader.ReadIfd(raw.Data, []*map[uint16]TagBuilder{&ExifTagMap, &TagMap}, foundTags)
 				r.SeekTo(cur)
 				return nil, true, nil
 			},
@@ -158,11 +158,11 @@ func init() {
 		0x87B1: TagBuilder{name: "GeoAsciiParamsTag"},
 		0x8825: TagBuilder{
 			name: "GPS IFD",
-			initializer: func(reader TagReader, foundTags *map[uint16]Tag, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+			initializer: func(reader TagReader, foundTags *map[uint16]Tag, name string, raw *RawTagData) (Tag, bool, error) {
 				fmt.Printf("Found GPS IFD...\n")
 				r := reader.GetReader()
 				cur := r.GetCurrentOffset()
-				reader.ReadIfd(data, []*map[uint16]TagBuilder{&GpsTagMap}, foundTags)
+				reader.ReadIfd(raw.Data, []*map[uint16]TagBuilder{&GpsTagMap}, foundTags)
 				r.SeekTo(cur)
 				return nil, true, nil
 			},
@@ -317,26 +317,26 @@ func init() {
 	}
 }
 
-func defaultInitializer(reader TagReader, _ *map[uint16]Tag, tag TagID, name string, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
-	dataSize, ok := common.DataFormatSizes[format]
+func defaultInitializer(reader TagReader, _ *map[uint16]Tag, name string, raw *RawTagData) (Tag, bool, error) {
+	dataSize, ok := common.DataFormatSizes[raw.Format]
 	if !ok {
 		return nil, false, errors.New("Do not have matching data format size")
 	}
-	switch format {
+	switch raw.Format {
 	case common.ASCIIString:
-		return readASCIIString(reader, tag, name, format, count, data)
+		return readASCIIString(reader, name, raw)
 	case common.Dfloat:
-		return readDoubleFloat(reader, tag, name, format, count, data)
+		return readDoubleFloat(reader, name, raw)
 	case common.Sbyte, common.Sshort, common.Slong:
-		return readSignedInteger(reader, tag, name, dataSize, format, count, data)
+		return readSignedInteger(reader, name, dataSize, raw)
 	case common.Sfloat:
-		return readSingleFloat(reader, tag, name, format, count, data)
+		return readSingleFloat(reader, name, raw)
 	case common.Srational:
-		return readSignedRational(reader, tag, name, format, count, data)
+		return readSignedRational(reader, name, raw)
 	case common.Ubyte, common.Ushort, common.Ulong:
-		return readUnsignedInteger(reader, tag, name, dataSize, format, count, data)
+		return readUnsignedInteger(reader, name, dataSize, raw)
 	case common.Urational:
-		return readUnsignedRational(reader, tag, name, format, count, data)
+		return readUnsignedRational(reader, name, raw)
 	}
 	return nil, false, nil
 }

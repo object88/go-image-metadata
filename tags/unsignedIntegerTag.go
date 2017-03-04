@@ -11,15 +11,14 @@ import (
 // 32 bits, but the type represents 8, 16, and 32 bit unsigned integers.
 type UnsignedIntegerTag struct {
 	BaseTag
-	format common.DataFormat
-	value  []uint32
+	value []uint32
 }
 
 func (m *UnsignedIntegerTag) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString(m.GetName())
 	buffer.WriteString(" (")
-	buffer.WriteString(m.format.String())
+	buffer.WriteString(m.BaseTag.GetType().String())
 	buffer.WriteString(") [")
 	for k, v := range m.value {
 		buffer.WriteString(strconv.Itoa(int(v)))
@@ -31,23 +30,23 @@ func (m *UnsignedIntegerTag) String() string {
 	return buffer.String()
 }
 
-func readUnsignedInteger(reader TagReader, tag TagID, name string, dataSize uint32, format common.DataFormat, count uint32, data uint32) (Tag, bool, error) {
+func readUnsignedInteger(reader TagReader, name string, dataSize uint32, raw *RawTagData) (Tag, bool, error) {
 	r := reader.GetReader()
 	var v []uint32
-	if dataSize*count > 4 {
-		v = make([]uint32, count)
+	if dataSize*raw.Count > 4 {
+		v = make([]uint32, raw.Count)
 		cur := r.GetCurrentOffset()
-		r.SeekTo(int64(data))
+		r.SeekTo(int64(raw.Data))
 		// Read off the string of numbers...
 		r.SeekTo(cur)
 	} else {
-		if format == common.Ubyte {
-			v, _ = r.ReadUint8FromUint32(count, data)
-		} else if format == common.Ushort {
-			v, _ = r.ReadUint16FromUint32(count, data)
-		} else if format == common.Ulong {
-			v = []uint32{data}
+		if raw.Format == common.Ubyte {
+			v, _ = r.ReadUint8FromUint32(raw.Count, raw.Data)
+		} else if raw.Format == common.Ushort {
+			v, _ = r.ReadUint16FromUint32(raw.Count, raw.Data)
+		} else if raw.Format == common.Ulong {
+			v = []uint32{raw.Data}
 		}
 	}
-	return &UnsignedIntegerTag{BaseTag{name, tag, format}, format, v}, true, nil
+	return &UnsignedIntegerTag{BaseTag{name, raw.Tag, raw.Format}, v}, true, nil
 }
