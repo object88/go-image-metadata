@@ -38,5 +38,5 @@ func readASCIIString(reader TagReader, tag TagID, name string, format common.Dat
 	reader.GetReader().SeekTo(int64(data))
 	s, _ := reader.GetReader().ReadNullTerminatedString()
 	reader.GetReader().SeekTo(cur)
-	return &StringTag{BaseTag{name, tag}, []string{s}}, true, nil
+	return &StringTag{BaseTag{name, tag, format}, []string{s}}, true, nil
 }

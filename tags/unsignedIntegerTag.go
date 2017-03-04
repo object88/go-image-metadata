@@ -49,5 +49,5 @@ func readUnsignedInteger(reader TagReader, tag TagID, name string, dataSize uint
 			v = []uint32{data}
 		}
 	}
-	return &UnsignedIntegerTag{BaseTag{name, tag}, format, v}, true, nil
+	return &UnsignedIntegerTag{BaseTag{name, tag, format}, format, v}, true, nil
 }

@@ -45,5 +45,5 @@ func readSingleFloat(reader TagReader, tag TagID, name string, format common.Dat
 		}
 		r.SeekTo(cur)
 	}
-	return &SingleFloatTag{BaseTag{name, tag}, v}, true, nil
+	return &SingleFloatTag{BaseTag{name, tag, format}, v}, true, nil
 }

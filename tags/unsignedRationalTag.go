@@ -48,5 +48,5 @@ func readUnsignedRational(reader TagReader, tag TagID, name string, format commo
 		v[i] = UnsignedRational{Numerator: n, Denominator: d}
 	}
 	r.SeekTo(cur)
-	return &UnsignedRationalTag{BaseTag{name, tag}, v}, true, nil
+	return &UnsignedRationalTag{BaseTag{name, tag, format}, v}, true, nil
 }

@@ -55,5 +55,5 @@ func readSignedInteger(reader TagReader, tag TagID, name string, dataSize uint32
 			v[0] = int32(n)
 		}
 	}
-	return &SignedIntegerTag{BaseTag{name, tag}, format, v}, true, nil
+	return &SignedIntegerTag{BaseTag{name, tag, format}, format, v}, true, nil
 }

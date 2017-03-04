@@ -40,5 +40,5 @@ func readDoubleFloat(reader TagReader, tag TagID, name string, format common.Dat
 		v[i] = float64(n)
 	}
 	r.SeekTo(cur)
-	return &DoubleFloatTag{BaseTag{name, tag}, v}, true, nil
+	return &DoubleFloatTag{BaseTag{name, tag, format}, v}, true, nil
 }

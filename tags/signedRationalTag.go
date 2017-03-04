@@ -48,5 +48,5 @@ func readSignedRational(reader TagReader, tag TagID, name string, format common.
 		v[i] = SignedRational{Numerator: int32(n), Denominator: int32(d)}
 	}
 	r.SeekTo(cur)
-	return &SignedRationalTag{BaseTag{name, tag}, v}, true, nil
+	return &SignedRationalTag{BaseTag{name, tag, format}, v}, true, nil
 }
